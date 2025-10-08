@@ -1,0 +1,144 @@
+version: "3.8"
+
+services:
+  # --- Application Services ---
+  backend:
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile.api
+    container_name: intelliagent-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - intelliagent-net
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile.web
+    container_name: intelliagent-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - intelliagent-net
+    restart: unless-stopped
+
+  # Note: The worker service will be fully defined in a later phase.
+  # This is a placeholder to set up the structure.
+  # worker:
+  #   build:
+  #     context: .
+  #     dockerfile: ./deploy/Dockerfile.worker
+  #   volumes:
+  #     - ./workers:/app
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - intelliagent-net
+
+  # --- Infrastructure Services ---
+  postgres:
+    image: postgres:16-alpine
+    container_name: intelliagent-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-intelliagent_db}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - intelliagent-net
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: intelliagent-redis
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - intelliagent-net
+    restart: unless-stopped
+
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    container_name: intelliagent-es
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # Recommended for local dev
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -f http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - intelliagent-net
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: intelliagent-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - intelliagent-net
+    restart: unless-stopped
+
+networks:
+  intelliagent-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  es_data:
+  qdrant_data:

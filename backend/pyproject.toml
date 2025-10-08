@@ -1,0 +1,71 @@
+[project]
+name = "intelliagent-backend"
+version = "0.1.0"
+description = "The backend service for the IntelliAgent platform."
+authors = [
+    {name = "Mohit Verma", email = "mviitb25@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+
+# Production Dependencies
+dependencies = [
+    # Core Framework
+    "fastapi==0.111.0",
+    "uvicorn[standard]==0.30.1",
+
+    # LangChain Ecosystem
+    "langchain>=0.2.0,<0.3.0",
+    "langgraph>=0.1.0,<0.2.0",
+    "langsmith>=0.1.0,<0.2.0",
+
+    # LLM Providers
+    "openai>=1.2.0",
+    "groq>=0.9.0",
+    "google-generativeai>=0.7.0",
+    "sentence-transformers>=3.0.0",
+
+    # Data & DB
+    "pydantic>=2.7.0,<3.0.0",
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.13.0",
+    "psycopg[binary]>=3.1.0",
+    "redis[hiredis]>=5.0.0",
+    "elasticsearch>=8.14.0",
+    "qdrant-client>=1.9.0",
+
+    # Workers & Tasks
+    "celery[redis]>=5.4.0",
+
+    # Observability
+    "opentelemetry-api>=1.25.0",
+    "opentelemetry-sdk>=1.25.0",
+    "opentelemetry-instrumentation-fastapi>=0.46b0",
+]
+
+[project.optional-dependencies]
+# Development Dependencies
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0",
+    "ruff>=0.5.0",
+    "mypy>=1.10.0",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "C90", "N", "D"]
+ignore = ["D203", "D212"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

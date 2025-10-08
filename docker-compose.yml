@@ -1,0 +1,9 @@
+# This is the main docker-compose file.
+# It points to the development configuration by default.
+# To run: docker compose up
+
+services:
+  # Include all services defined in the development compose file.
+  # This allows running 'docker compose up' without specifying the -f flag.
+  include:
+    - docker-compose.dev.yml

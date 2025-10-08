@@ -1,0 +1,12 @@
+# TODO: This file will be updated in Phase 4 for production deployment.
+# It will use pre-built images, remove hot-reloading volumes,
+# and include production-specific settings like secrets management.
+
+version: "3.8"
+
+services:
+  # Production services will be defined here.
+  # For example:
+  # backend:
+  #   image: your-registry/intelliagent-backend:latest
+  #   ...
