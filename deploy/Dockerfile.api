@@ -20,7 +20,8 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install dependencies using uv directly from pyproject.toml
-# Using --no-deps to prevent installing the package in development mode
+# Install with dependencies first, then the package in development mode
+RUN uv pip install "uvicorn[standard]"
 RUN uv pip install --no-deps -e ".[dev]"
 
 # ---
