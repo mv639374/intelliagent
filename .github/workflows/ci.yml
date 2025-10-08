@@ -9,7 +9,27 @@ on:
 
 jobs:
   lint:
-    uses: ./.github/workflows/lint.yml
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Run backend lint
+        uses: ./.github/workflows/lint.yml
 
   test:
     uses: ./.github/workflows/test.yml
