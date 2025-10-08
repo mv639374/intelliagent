@@ -1,8 +1,40 @@
+# # Stage 1: Install dependencies
+# FROM node:20-alpine AS deps
+# WORKDIR /app
+# COPY frontend/package.json frontend/package-lock.json ./
+# RUN npm install
+
+# # ---
+# # Stage 2: Build the application
+# FROM node:20-alpine AS builder
+# WORKDIR /app
+# COPY --from=deps /app/node_modules ./node_modules
+# COPY frontend/ .
+# RUN npm run build
+
+# # ---
+# # Stage 3: Create the final production image
+# FROM node:20-alpine AS final
+# WORKDIR /app
+# ENV NODE_ENV production
+
+# COPY --from=builder /app/public ./public
+# COPY --from=builder /app/.next/standalone ./
+# COPY --from=builder /app/.next/static ./.next/static
+
+# EXPOSE 3000
+
+# ENV PORT 3000
+
+# CMD ["node", "server.js"]
+
+
+
 # Stage 1: Install dependencies
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm install
+RUN npm ci
 
 # ---
 # Stage 2: Build the application
@@ -16,14 +48,15 @@ RUN npm run build
 # Stage 3: Create the final production image
 FROM node:20-alpine AS final
 WORKDIR /app
-ENV NODE_ENV production
+ENV NODE_ENV=production \
+    PORT=3000
 
+# Copy necessary files from builder
+COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 EXPOSE 3000
-
-ENV PORT 3000
 
 CMD ["node", "server.js"]
