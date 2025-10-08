@@ -1,46 +1,50 @@
 # Stage 1: Build the environment
 FROM python:3.11-slim AS builder
 
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install uv, our Python package manager
-RUN pip install uv
+RUN pip install --no-cache-dir uv
 
 # Set the working directory
 WORKDIR /app
 
-# Copy dependency definition files
-COPY ./backend/pyproject.toml ./backend/
+# Copy only the dependency files first (for better layer caching)
+COPY backend/pyproject.toml .
 
-# Generate requirements.txt from pyproject.toml
-RUN uv pip compile ./backend/pyproject.toml -o ./backend/requirements.txt
+# Create and activate virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Install dependencies into a virtual environment
-RUN uv venv /opt/venv
-COPY ./backend/requirements.txt .
-RUN . /opt/venv/bin/activate && uv pip sync requirements.txt
+# Install dependencies using uv directly from pyproject.toml
+# Using --no-deps to prevent installing the package in development mode
+RUN uv pip install --no-deps -e ".[dev]"
 
 # ---
 # Stage 2: Create the final production image
 FROM python:3.11-slim AS final
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH"
 
 # Copy the virtual environment from the builder stage
 COPY --from=builder /opt/venv /opt/venv
-
-# Set the PATH to include the venv
-ENV PATH="/opt/venv/bin:$PATH"
 
 # Set the working directory
 WORKDIR /app
 
 # Copy the backend application code
+# Using .dockerignore to exclude unnecessary files
 COPY ./backend/ .
 
 # Expose the port the app runs on
 EXPOSE 8000
 
 # Command to run the application
-# Use --reload for development to automatically restart on code changes
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Removed --reload for production use
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
