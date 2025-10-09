@@ -7,6 +7,15 @@ services:
       context: .
       dockerfile: ./deploy/Dockerfile.api
     container_name: intelliagent-backend
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
     ports:
       - "8000:8000"
     volumes:
@@ -24,22 +33,22 @@ services:
       - intelliagent-net
     restart: unless-stopped
 
-  frontend:
-    build:
-      context: .
-      dockerfile: ./deploy/Dockerfile.web
-    container_name: intelliagent-frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-    depends_on:
-      - backend
-    networks:
-      - intelliagent-net
-    restart: unless-stopped
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: ./deploy/Dockerfile.web
+  #   container_name: intelliagent-frontend
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #     - /app/.next
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - intelliagent-net
+  #   restart: unless-stopped
 
   # Note: The worker service will be fully defined in a later phase.
   # This is a placeholder to set up the structure.

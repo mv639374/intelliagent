@@ -1,51 +1,131 @@
-# Stage 1: Build the environment
-FROM python:3.11-slim AS builder
+# # deploy/Dockerfile.api
+# # Stage 1: Builder - Install dependencies
+# FROM python:3.11-slim AS builder
 
-# Install build dependencies
+# # Install system dependencies
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     tesseract-ocr \
+#     poppler-utils \
+#     build-essential \
+#     curl \
+#     && rm -rf /var/lib/apt/lists/*
+
+# # Install uv
+# COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# WORKDIR /app
+
+# # Copy ONLY dependency files first (for better caching)
+# COPY backend/pyproject.toml backend/uv.lock* ./
+
+# # Install dependencies system-wide (NO editable install yet)
+# RUN uv pip install --system --no-cache -r pyproject.toml
+
+# # Download spaCy model
+# RUN python -m spacy download en_core_web_sm
+
+# # ---
+# # Stage 2: Runtime - Slim final image
+# FROM python:3.11-slim AS final
+
+# # Install runtime system dependencies
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     tesseract-ocr \
+#     poppler-utils \
+#     && rm -rf /var/lib/apt/lists/*
+
+# # Set environment variables
+# ENV PYTHONDONTWRITEBYTECODE=1 \
+#     PYTHONUNBUFFERED=1
+
+# WORKDIR /app
+
+# # Copy installed packages from builder
+# COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+# COPY --from=builder /usr/local/bin /usr/local/bin
+
+# # Application code will be mounted via volume in dev (see docker-compose)
+
+# # Expose port
+# EXPOSE 8000
+
+# # Run with reload for development
+# CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+
+
+
+# deploy/Dockerfile.api
+# Stage 1: Builder - Install dependencies
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04 AS builder
+
+# Install Python 3.11
+RUN apt-get update && apt-get install -y python3.11 python3-pip && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python3 && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python && \
+    rm -rf /var/lib/apt/lists/*
+
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    poppler-utils \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv, our Python package manager
-RUN pip install --no-cache-dir uv
 
-# Set the working directory
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 WORKDIR /app
 
-# Copy only the dependency files first (for better layer caching)
-COPY backend/pyproject.toml .
+# Copy ONLY dependency files first (for better caching)
+COPY backend/pyproject.toml backend/uv.lock* ./
 
-# Create and activate virtual environment
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Install dependencies system-wide (NO editable install yet)
+RUN uv pip install --system --no-cache -r pyproject.toml
 
-# Install dependencies using uv directly from pyproject.toml
-# Install with dependencies first, then the package in development mode
-RUN uv pip install "uvicorn[standard]"
-RUN uv pip install --no-deps -e ".[dev]"
+# Download spaCy model
+RUN python -m spacy download en_core_web_sm
+
+# Install PyTorch with CUDA
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+
 
 # ---
-# Stage 2: Create the final production image
-FROM python:3.11-slim AS final
+# Stage 2: Runtime - Slim final image
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+
+# Install runtime system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python 3.11 in runtime stage
+RUN apt-get update && apt-get install -y python3.11 python3-pip && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python3 && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python && \
+    rm -rf /var/lib/apt/lists/*
+
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PATH="/opt/venv/bin:$PATH"
+    PYTHONUNBUFFERED=1
 
-# Copy the virtual environment from the builder stage
-COPY --from=builder /opt/venv /opt/venv
-
-# Set the working directory
 WORKDIR /app
 
-# Copy the backend application code
-# Using .dockerignore to exclude unnecessary files
-COPY ./backend/ .
+# Copy installed packages from builder
+COPY --from=builder /usr/lib/python3.11 /usr/lib/python3.11
+COPY --from=builder /usr/local /usr/local
 
-# Expose the port the app runs on
+
+# Application code will be mounted via volume in dev (see docker-compose)
+
+# Expose port
 EXPOSE 8000
 
-# Command to run the application
-# Removed --reload for production use
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run with reload for development
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

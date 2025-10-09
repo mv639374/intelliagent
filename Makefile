@@ -48,3 +48,15 @@ clean:
 	@echo "Cleaning up..."
 	@find . -type f -name "*.py[co]" -delete
 	@find . -type d -name "__pycache__" -delete
+
+delete:
+	@echo "Deleting files from database..."
+	docker exec -it intelliagent-db psql -U user -d intelliagent_db -c "DELETE FROM chunks; DELETE FROM documents;"
+
+tests:
+	@echo "Running tests..."
+	docker compose -f docker-compose.dev.yml exec backend python -m pytest tests/ -v
+
+celery:
+	@echo "Starting Celery worker..."
+	docker compose -f docker-compose.dev.yml exec backend celery -A workers.celery_app worker -l info --pool=solo
