@@ -82,3 +82,19 @@ rm -rf backend/alembic/versions/*.py
 # Run files in container
 
 `docker exec -it intelliagent-backend sh -c "cd /app && PYTHONPATH=/app python scripts/keyword_search_test.py"`
+
+
+# Restart backend
+`docker compose -f docker-compose.dev.yml restart backend`
+
+
+# Clear complete docker images
+
+### Remove unused images
+docker image prune -a
+
+### Remove build cache (if needed)
+docker builder prune -a
+
+### Remove everything and start fresh
+docker system prune -a --volumes
