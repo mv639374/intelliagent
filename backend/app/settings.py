@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     LANGCHAIN_PROJECT: str ="IntelliAgent"
 
     # JWT Settings
-    JWT_SECRET_KEY: str = "237c96a0650f883c914ce14ce3d69d4438f4529e0557d2d62cd81d70c293af9e"
+    JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
