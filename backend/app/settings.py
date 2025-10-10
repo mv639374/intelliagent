@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # LangSmith Tracing
     LANGCHAIN_TRACING_V2: bool = True
     LANGSMITH_ENDPOINT: str ="https://api.smith.langchain.com"
-    LANGSMITH_API_KEY: str ="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"
+    LANGSMITH_API_KEY: str
     LANGCHAIN_PROJECT: str ="IntelliAgent"
 
     # JWT Settings
