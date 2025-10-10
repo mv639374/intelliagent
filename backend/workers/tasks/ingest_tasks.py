@@ -1,4 +1,5 @@
 # workers/tasks/ingest_tasks.py
+
 """
 Document ingestion task - routes documents to appropriate processing based on file type.
 Uses synchronous SQLAlchemy to avoid event loop conflicts in Celery.
@@ -9,6 +10,7 @@ from sqlalchemy import select  # ← Added for sync queries
 
 from app.db.sync_session import get_sync_db  # ← Changed from AsyncSessionLocal
 from app.models.document import Document, DocumentStatus
+from app.rag.ingest.metadata_extractor import MetadataExtractor  # ← NEW: Import metadata extractor
 from workers.celery_app import celery_app
 from workers.tasks.ocr_tasks import ocr_document_task
 from workers.tasks.process_text_tasks import process_text_document_task
@@ -26,7 +28,8 @@ def ingest_document_task(document_id: str, sha256_hash: str):
 
     Workflow:
         1. Updates document status to PROCESSING
-        2. Routes based on mime type:
+        2. Extracts and saves metadata from the file
+        3. Routes based on mime type:
            - PDF → ocr_document_task
            - DOCX → Extract text → process_text_document_task
            - TXT → Read text → process_text_document_task
@@ -53,7 +56,21 @@ def ingest_document_task(document_id: str, sha256_hash: str):
             file_path = f"/app/uploads/{sha256_hash}"
             print(f"Processing file at: {file_path}")
 
-            # 4. Route based on mime type
+            # 4. Extract metadata from the original file
+            try:
+                with open(file_path, "rb") as f:
+                    file_content = f.read()
+
+                meta_extractor = MetadataExtractor()
+                metadata = meta_extractor.extract(file_content, doc.mime_type)
+                if metadata:
+                    doc.doc_metadata = metadata
+                    db.commit()
+                    print(f"Extracted and saved metadata for document {document_id}: {metadata}")
+            except Exception as e:
+                print(f"Could not extract metadata for {document_id}: {e}")
+
+            # 5. Route based on mime type
             if doc.mime_type == "application/pdf":
                 print("Document is a PDF. Enqueuing OCR task.")
                 ocr_document_task.delay(document_id=document_id, file_path=file_path)

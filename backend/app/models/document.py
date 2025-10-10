@@ -32,7 +32,7 @@ import uuid
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy import Enum as SQLAlchemyEnum
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -55,6 +55,7 @@ class Document(Base):
     size_bytes = Column(Integer)
     sha256 = Column(String(64), unique=True, nullable=False)
     status = Column(SQLAlchemyEnum(DocumentStatus), default=DocumentStatus.PENDING, nullable=False)
+    doc_metadata = Column(JSONB)
     owner_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=func.now())
 

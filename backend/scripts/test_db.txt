@@ -1,0 +1,37 @@
+# Create a seed script to add test data
+docker compose -f docker-compose.dev.yml exec backend python -c "
+import asyncio
+import uuid
+from app.db.session import AsyncSessionLocal
+from app.models.user import User, UserRole
+from app.models.project import Project
+
+async def seed_db():
+    async with AsyncSessionLocal() as session:
+        # Create a test user
+        user = User(
+            id=uuid.uuid4(),
+            username='testuser',
+            email='test@example.com',
+            hashed_password='dummy_hash',  # In production, use proper password hashing
+            role=UserRole.USER
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+
+        # Create a test project
+        project = Project(
+            id=uuid.uuid4(),
+            name='Test Project',
+            description='Test project for development',
+            owner_id=user.id
+        )
+        session.add(project)
+        await session.commit()
+
+        print(f'✓ Created user: {user.username} ({user.id})')
+        print(f'✓ Created project: {project.name} ({project.id})')
+
+asyncio.run(seed_db())
+"

@@ -1,0 +1,3 @@
+backend/alembic/versions/
+backend/workers/tasks/ingest_tasks.py
+backend/alembic/env.py

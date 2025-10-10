@@ -7,6 +7,7 @@ from app.db.vector_db import VectorDBClient
 from app.models.chunk import Chunk
 from app.models.document import Document, DocumentStatus
 from app.rag.embedder import Embedder
+from app.rag.index.keyword_indexer import keyword_indexer
 from workers.celery_app import celery_app
 
 
@@ -26,6 +27,22 @@ def index_document_task(document_id: str):
             if not chunks:
                 print(f"No chunks found for document {document_id}")
                 return
+
+            # 1. Index chunks in Elasticsearch for keyword search
+            chunk_data_for_es = [
+                {
+                    "chunk_id": str(chunk.id),
+                    "text": chunk.text,
+                    "metadata": {
+                        "document_id": str(chunk.document_id),
+                        "chunk_index": chunk.chunk_index,
+                        # Add any other relevant metadata from chunk.chunk_metadata
+                    },
+                }
+                for chunk in chunks
+            ]
+            keyword_indexer.index_chunks(chunk_data_for_es)
+            print(f"✓ Indexed {len(chunks)} chunks to Elasticsearch for document {document_id}")
 
             # Generate embeddings (batch mode)
             embedder = Embedder()
