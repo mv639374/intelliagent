@@ -22,7 +22,7 @@ async def rate_limit_middleware(request: Request, call_next):
     pipeline.expire(key, 60) # 60 seconds window
     request_count, _ = pipeline.execute()
 
-    if request_count > 10: # 10 requests per minute
+    if request_count > 100: # 10 requests per minute
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many requests",

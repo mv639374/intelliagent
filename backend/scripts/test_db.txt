@@ -11,8 +11,8 @@ async def seed_db():
         # Create a test user
         user = User(
             id=uuid.uuid4(),
-            username='testuser',
-            email='test@example.com',
+            username='checklist_user',
+            email='checklist@test.com',
             hashed_password='dummy_hash',  # In production, use proper password hashing
             role=UserRole.USER
         )
@@ -23,7 +23,7 @@ async def seed_db():
         # Create a test project
         project = Project(
             id=uuid.uuid4(),
-            name='Test Project',
+            name='Checklist Project',
             description='Test project for development',
             owner_id=user.id
         )

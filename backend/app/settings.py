@@ -15,12 +15,12 @@ class Settings(BaseSettings):
 
     # LangSmith Tracing
     LANGCHAIN_TRACING_V2: bool = True
-    LANGCHAIN_ENDPOINT: str = "https://api.smith.langchain.com"
-    LANGCHAIN_API_KEY: str = "your-langsmith-api-key"
-    LANGCHAIN_PROJECT: str = "IntelliAgent"
+    LANGSMITH_ENDPOINT: str ="https://api.smith.langchain.com"
+    LANGSMITH_API_KEY: str ="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"
+    LANGCHAIN_PROJECT: str ="IntelliAgent"
 
     # JWT Settings
-    JWT_SECRET_KEY: str = "a-very-secret-key-that-you-should-change"
+    JWT_SECRET_KEY: str = "237c96a0650f883c914ce14ce3d69d4438f4529e0557d2d62cd81d70c293af9e"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 

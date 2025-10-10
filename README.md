@@ -82,7 +82,7 @@ rm -rf backend/alembic/versions/*.py
 # Run files in container
 
 `docker exec -it intelliagent-backend sh -c "cd /app && PYTHONPATH=/app python scripts/keyword_search_test.py"`
-
+pip install argon2_cffi
 
 # Restart backend
 `docker compose -f docker-compose.dev.yml restart backend`
@@ -98,3 +98,16 @@ docker builder prune -a
 
 ### Remove everything and start fresh
 docker system prune -a --volumes
+
+
+
+# Get whole list of users
+`docker exec -it intelliagent-db psql -U user -d intelliagent_db -c "SELECT id, username, email, role, created_at FROM users;"`
+# Delete all of them
+`docker exec -it intelliagent-db psql -U user -d intelliagent_db -c "TRUNCATE TABLE users CASCADE;"`
+
+# Install a library inside a container
+docker exec -it intelliagent-backend python3.11 -m pip install pandas
+
+
+docker exec -it intelliagent-backend sh -c "cd /app && PYTHONPATH=/app python scripts/run_evals.py --dataset rag_eval"

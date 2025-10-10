@@ -2,6 +2,7 @@ from .audit import AuditLog
 from .chunk import Chunk
 from .conversation import Conversation
 from .document import Document, DocumentStatus
+from .evaluation import EvaluationRun
 from .message import Message, MessageRole
 from .project import Project
 from .user import User, UserRole
@@ -18,4 +19,5 @@ __all__ = [
     "Chunk",
     "Conversation",
     "AuditLog",
+    "EvaluationRun",
 ]

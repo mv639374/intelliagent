@@ -4,8 +4,8 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from app.settings import settings
 
-# Use argon2 instead of bcrypt (more modern and recommended)
-pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+# Use bcrypt instead of argon2
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
