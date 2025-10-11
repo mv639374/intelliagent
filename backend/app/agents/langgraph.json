@@ -1,0 +1,6 @@
+{
+    "dependencies": ["."],
+    "graphs": {
+      "agent": "./graph_factory.py:main_agent_graph"
+    }
+  }

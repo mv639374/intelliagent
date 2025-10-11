@@ -60,3 +60,7 @@ tests:
 celery:
 	@echo "Starting Celery worker..."
 	docker compose -f docker-compose.dev.yml exec backend celery -A workers.celery_app worker -l info --pool=solo
+
+db:
+	@echo "Starting PostrgreSQL"
+	docker exec -it intelliagent-db psql -U user -d intelliagent_db

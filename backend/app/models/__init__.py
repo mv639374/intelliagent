@@ -6,6 +6,7 @@ from .evaluation import EvaluationRun
 from .message import Message, MessageRole
 from .project import Project
 from .user import User, UserRole
+from .graph_checkpoint import GraphCheckpoint
 
 # This makes these classes available when importing from app.models
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "Conversation",
     "AuditLog",
     "EvaluationRun",
+    "GraphCheckpoint",
 ]

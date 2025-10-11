@@ -21,7 +21,9 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 # We will import this from our base file
-from app.db.base_class import Base
+# Import the Base object from app.db.base. This single import
+# gives Alembic access to the metadata of all registered models.
+from app.db.base import Base
 from app.models import *
 
 target_metadata = Base.metadata
